@@ -12,22 +12,26 @@ if "shown_briefing" not in st.session_state:
 
 # ------------------ 사건 브리핑 ------------------
 briefing = """
-🕵️‍♂️ **[보조 탐정 AI]**  
-안녕하세요. 이번 사건은 피해자의 집에서 발생했습니다.  
-금요일 저녁, 세 명의 지인이 피해자의 집에 방문했고, 그날 밤 피해자는 의식을 잃은 채 발견되었습니다.  
-범행 시간이 추정되는 6시 30분부터 7시 사이에, 현장에 있던 사람은 다음 세 명입니다:  
-1. 친구 **유진**  
-2. 남자친구 **현수**  
-3. 아는 동생 **지민**
+🔍 **사건 개요**  
+피해자 **민경**은 자신의 자택에서 숨진 채 발견되었습니다.  
+현장에서는 피자 상자, 깨진 유리잔, 그리고 다툰 흔적이 발견되었습니다.  
+당시 현장에는 친구 **지은**, 남자친구 **민수**, 아는 동생 **수빈**이 있었으며,  
+모두 ‘우연히’ 방문했다고 진술하고 있습니다.
 
-세 명 모두 초반엔 갈등이나 다툼이 없었다고 주장하고 있지만, 단서를 통해 진실을 밝혀야 합니다.  
-지금까지 수집된 단서들을 확인하며 대화를 이어가 주세요.
+보조 탐정: “당신은 이번 사건의 AI 수사관입니다.  
+이제 용의자들과 대화를 시작해 진실을 밝혀주세요.”  
 """
 
-if not st.session_state.shown_briefing:
+# ✅ ① 상단에 고정 박스(expander)
+with st.expander("🕵️‍♂️ 보조 탐정의 사건 브리핑", expanded=True):
+    st.markdown(briefing)
+
+# ✅ ② 채팅 말풍선으로 대화 시작 시 안내
+if not st.session_state.get("briefing_done"):
     with st.chat_message("assistant", avatar="🕵️‍♂️"):
         st.markdown(briefing)
-    st.session_state.shown_briefing = True
+    st.session_state["briefing_done"] = True
+
 
 # ------------------ 단서 목록 ------------------
 clues = {
