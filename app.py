@@ -120,3 +120,4 @@ with st.sidebar:
 
     if st.button("🧩 최종 추리 제출"):
         st.markdown("👉 추리 제출 기능은 추후 업데이트될 예정입니다.")
+
