@@ -1,60 +1,54 @@
 import streamlit as st
-from datetime import datetime
 
-st.set_page_config(page_title="ChatCrime: 대화 속에 답이 있다", layout="wide")
+# ------------------ 페이지 기본 세팅 ------------------
+st.set_page_config(page_title="ChatCrime", layout="wide")
+st.title("🔎 ChatCrime: 대화 속에 답이 있다")
 
-# =========================== 시사적 데이터 ===========================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-    st.session_state.character = "지은"
-    st.session_state.hints = [
-        "1. 사망 시간은 내년 6월 4일 오전 2시와 3시 사이에 일어났어요.",
-        "2. 현장에서 평소보다 조금 더 큰 상점의 한 파워스 유전 표지가 발견되었어요.",
-        "3. 무사건 선택진은 감사가 될 것 같은 사회인이었어요.",
-        "4. 사건 내내 지역의 CCTV 검토 결과, 방송 시간과 일치합니다.",
-        "5. 자칭 인물의 신사가 매우 가\uubcc0이나 맞아볼 수 있어요."
-    ]
-
-# =========================== 왼쪽 : 단서리스크 영역 ===========================
-with st.sidebar:
-    st.markdown("### 탐사 조수")
-    for hint in st.session_state.hints:
-        st.info(hint)
-
-# =========================== 우쪽 : 채팅 UI ===========================
-st.title(":mag: ChatCrime: \ud574\uacb0\uc758 \uc2dc\uc791")
-st.caption("\ud604장의 \uc778\ubb3c\uacfc \ub300\ud654\ub97c \ud1b5\ud574 \uc0ac건을 \ud574결\ud574\ubcf4세요.")
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=msg["avatar"]):
-        st.markdown(msg["content"])
-
-# =========================== 대화 입력 ===========================
-prompt = st.chat_input("질문을 입력해주세요")
-
-# =========================== 인물 배정 ===========================
-character_styles = {
-    "지은": {"avatar": "🤔", "style": "어느정도 느낌적으로 지위를 당하는 미의적인 계단"},
-    "현우": {"avatar": "🥵", "style": "그리고 도움을 줄 수 있는 착용적인 계단"},
-    "소영": {"avatar": "😠", "style": "다음을 걸면 드디어 불편해진다고 그래도 말할수 없는 계단"}
+# ------------------ 단서 목록 ------------------
+clues = {
+    "단서 1. 피자 상자": "사건 현장에 있던 피자 상자는 오후 6시 38분에 주문되었고, 주문자 이름은 '은비 친구'로 등록되어 있었습니다.",
+    "단서 2. 유리 조각": "현관 앞 바닥에는 남성용 스마트워치의 유리 조각이 깨져 있었고, 시계는 6시 40분에 멈춰 있었습니다.",
+    "단서 3. CCTV 로그": "CCTV에는 6시 15분경 지민이 초인종을 누르는 장면만 녹화되어 있으며, 나가는 장면은 없습니다.",
+    "단서 4. 피해자 메모": "피해자의 휴대폰 메모장에는 '그 사람에게 다시 말해야 할까? 다신 이런 일 없다고 믿고 싶은데…'라는 문장이 적혀 있었습니다.",
+    "단서 5. 냉장고 메모": "냉장고에 붙은 메모에는 '금요일 저녁엔 나랑 보기로 했잖아. 다른 사람 또 불렀으면 진짜 실망이야.' 라는 글이 적혀 있었고, 필체는 남성 것으로 추정됩니다."
 }
 
-# =========================== 방송 시대를 만들기 ===========================
-if prompt:
-    user_msg = {"role": "user", "avatar": "👤", "content": prompt}
-    st.session_state.messages.append(user_msg)
-
-    # 계단 데이터에 기반해 다음 대응 정보 만들기
-    responses = {
-        "지은": "저도 아직 혼란스러워요. 무슨 일이 있었는지도 모르겠고... 너무 무서워요.",
-        "현우": "전 아무것도 못 봤어요. 그 시간에 잠깐 나가 있었거든요.",
-        "소영": "왜 자꾸 저한테 묻는 거예요? 전 그냥 제 방에 있었어요!"
+# ------------------ 인물 반응 설정 ------------------
+character_responses = {
+    "유진": {
+        "단서 1. 피자 상자": "어..? 나 말고 다른 친구 이름으로 시켰나...? 기억 안 나네~",
+        "단서 2. 유리 조각": "시계요? 전혀 몰랐어요~ 저는 도착도 못 했거든요!",
+        "단서 3. CCTV 로그": "지민이 왔었어? 진짜? 몰랐네~ 하하…",
+        "단서 4. 피해자 메모": "음… 누구 얘기하는 건지 모르겠네요. 예전 일 아닐까요?",
+        "단서 5. 냉장고 메모": "그거… 현수가 쓴 걸 수도 있겠네요. 요즘 좀 예민하긴 했어요."
+    },
+    "현수": {
+        "단서 1. 피자 상자": "나 그런 이름으로 주문한 적 없어. 믿어줘.",
+        "단서 2. 유리 조각": "시계? 내가 최근에 잃어버린 시계가 있긴 한데… 우연이겠지.",
+        "단서 3. CCTV 로그": "지민이 왔었다고…? 왜 아무 말도 안 했지 그럼?",
+        "단서 4. 피해자 메모": "…그건 나한테 한 말 아냐. 나 그런 짓 안 해.",
+        "단서 5. 냉장고 메모": "…내 글씨 아닐 수도 있어. 누가 흉내 낸 걸 수도 있잖아."
+    },
+    "지민": {
+        "단서 1. 피자 상자": "그… 그거 내가 주문한 건 맞는데, 그냥 같이 먹으려고요…!",
+        "단서 2. 유리 조각": "시계요? 저 그런 거 안 차요! 진짜요!",
+        "단서 3. CCTV 로그": "나간 장면이 없다고요? 그, 그건 이상하네요. 분명 나갔는데…",
+        "단서 4. 피해자 메모": "음… 저랑 상관 없는 얘기 같아요.",
+        "단서 5. 냉장고 메모": "저… 남자 아니잖아요. 전 아니에요."
     }
+}
 
-    for character, response in responses.items():
-        ai_msg = {
-            "role": "assistant",
-            "avatar": character_styles[character]["avatar"],
-            "content": f"**{character}:** {response}"
-        }
-        st.session_state.messages.append(ai_msg)
+# ------------------ 사이드바 단서 선택 ------------------
+st.sidebar.title("🧩 단서를 선택하세요")
+selected_clue = st.sidebar.radio("단서 보기", list(clues.keys()))
+st.sidebar.markdown(f"🕵️‍♀️ **단서 내용:**\n\n{clues[selected_clue]}")
+
+# ------------------ 캐릭터 선택 및 반응 출력 ------------------
+st.write("## 👤 용의자와 대화하기")
+
+cols = st.columns(3)
+
+for i, (name, responses) in enumerate(character_responses.items()):
+    with cols[i]:
+        st.markdown(f"### 🗣️ {name}")
+        st.info(responses[selected_clue])
