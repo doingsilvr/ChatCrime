@@ -30,17 +30,13 @@ if not uploaded_file:
 @st.cache_data
 def load_data(file):
     df = pd.read_excel(file, header=[0, 1, 2])
-    # 컬럼 평탄화
     df.columns = [' '.join([str(c) for c in col if 'Unnamed' not in str(c)]).strip() for col in df.columns]
     return df
 
 try:
     raw_df = pd.read_excel(uploaded_file)
-    # 실제 데이터 컬럼 추출 (첫 몇 줄이 헤더인 경우 처리)
-    # 유형, Segment ID, Source, Translation, Gemini JSON 컬럼 찾기
     df_raw = pd.read_excel(uploaded_file, header=None)
     
-    # 헤더 행 찾기 (Segment ID가 있는 행)
     header_row = None
     for i, row in df_raw.iterrows():
         if any('Segment ID' in str(v) for v in row.values):
@@ -53,7 +49,6 @@ try:
     df = pd.read_excel(uploaded_file, header=header_row)
     df.columns = [str(c).strip() for c in df.columns]
     
-    # 필요 컬럼 찾기
     seg_col = next((c for c in df.columns if 'Segment' in c or 'segment' in c.lower()), None)
     src_col = next((c for c in df.columns if 'Source' in c or 'KO' in c), None)
     trans_col = next((c for c in df.columns if 'Translation' in c or 'EN' in c), None)
@@ -93,9 +88,9 @@ def check_type1(marked_text, translation):
         return None
     marked = str(marked_text).strip()
     if marked.lower() in str(translation).lower():
-        return "O"  # 번역문에 존재 → 판정 유효
+        return "O"
     else:
-        return "X"  # 번역문에 없음 → 허위 오류
+        return "X"
 
 # ─── 유형2: LLM 기반 검수 ───
 def check_type2(client, source, translation, marked_text, note):
@@ -122,9 +117,9 @@ Gemini note: {note}"""
         )
         answer = response.choices[0].message.content.strip().upper()
         if "N" in answer:
-            return "X"  # 문법 오류 있음 → 허위 아님 (실제 오류)
+            return "X"
         else:
-            return "O"  # 문법적으로 맞음 → Gemini 허위 오류
+            return "O"
     except Exception as e:
         return f"오류: {e}"
 
@@ -166,7 +161,6 @@ if st.button("🚀 검수 시작", type="primary"):
             category = err.get('category', '')
             subtype = err.get('subtype', '')
 
-            # 유형1 체크
             type1_result = check_type1(marked, translation)
 
             if type1_result == "X":
@@ -174,7 +168,6 @@ if st.button("🚀 검수 시작", type="primary"):
                 check_type = "유형1 (코드)"
                 비고 = "번역문에 marked_text 없음"
             else:
-                # 유형2 체크
                 status.text(f"🔄 Segment {seg_id} - 오류 {err_idx+1} LLM 검수 중...")
                 type2_result = check_type2(client, source, translation, marked, note)
                 if type2_result == "O":
@@ -222,7 +215,7 @@ if 'result_df' in st.session_state:
     col2.metric("✅ 유효 오류", valid)
     col3.metric("❌ 허위 오류 탐지", false_errors, delta=f"{false_errors/total*100:.1f}%" if total > 0 else "0%")
 
-    # 색상 강조
+    # ── applymap → map 으로 수정 ──
     def highlight_verdict(val):
         if val == 'X (허위오류)':
             return 'background-color: #ffcccc'
@@ -230,15 +223,13 @@ if 'result_df' in st.session_state:
             return 'background-color: #ccffcc'
         return ''
 
-    styled = result_df.style.applymap(highlight_verdict, subset=['판정'])
+    styled = result_df.style.map(highlight_verdict, subset=['판정'])
     st.dataframe(styled, use_container_width=True)
 
-    # 허위 오류만 보기
     if false_errors > 0:
         with st.expander(f"❌ 허위 오류 목록만 보기 ({false_errors}건)"):
             st.dataframe(result_df[result_df['판정'] == 'X (허위오류)'], use_container_width=True)
 
-    # 다운로드
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         result_df.to_excel(writer, index=False, sheet_name='검수결과')
