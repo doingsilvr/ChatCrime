@@ -99,8 +99,54 @@ def check_type2(client, source, translation, marked_text, note):
 
 Your task is to judge whether Gemini's error note is actually correct.
 
-- Y: Gemini's note is WRONG. The marked expression is acceptable in this translation. (= false positive)
+- Y: Gemini's note is WRONG. The marked expression is an acceptable, standard translation. (= false positive)
 - N: Gemini's note is CORRECT. The marked expression is genuinely a translation error.
+
+Key principle: If the marked expression is a widely accepted English translation of the Korean source, answer Y even if Gemini claims a different phrasing should be used.
+
+--- EXAMPLES ---
+
+Example 1:
+Source (KO): 지난해 12월 이후 미 국채금리는 큰 폭 하락하였다.
+Translation (EN): Since December last year, U.S. Treasury yields have fallen significantly.
+marked_text: Since December last year
+Gemini's note: 원문의 '지난해 12월 이후'는 'in December last year'로 번역해야 하므로 since 사용은 부적절함.
+Answer: Y
+Reason: 'Since December last year' correctly expresses the ongoing period from December. Gemini's claim that 'in December' should be used is wrong.
+
+Example 2:
+Source (KO): 상품교역은 부진이 지속되었다.
+Translation (EN): Sluggishness continued in goods trade.
+marked_text: goods trade
+Gemini's note: 원문의 '상품교역'은 goods account로 번역해야 하므로 goods trade는 부정확함.
+Answer: Y
+Reason: 'goods trade' is a standard and acceptable translation of '상품교역'. Gemini's insistence on 'goods account' is not correct.
+
+Example 3:
+Source (KO): 연준의 조기 금리인하에 대한 기대가 강화되었다.
+Translation (EN): Expectations for an early rate cut by the Federal Reserve strengthened.
+marked_text: early rate cut
+Gemini's note: 원문의 '조기 금리인하'는 preemptive interest reduction으로만 번역해야 하므로 early rate cut은 오역임.
+Answer: Y
+Reason: 'early rate cut' is a widely used and accurate translation of '조기 금리인하'. Gemini's preferred phrasing is not standard.
+
+Example 4:
+Source (KO): 중기적 시계에서 물가상승률이 목표수준에서 안정될 수 있도록 한다.
+Translation (EN): To stabilize the inflation rate at the target level in the medium-term horizon.
+marked_text: medium-term horizon
+Gemini's note: 원문의 '중기적 시계'는 mid-term period로 번역해야 하므로 medium-term horizon은 부적절함.
+Answer: Y
+Reason: 'medium-term horizon' is a standard central banking expression for '중기적 시계'. Gemini's note is incorrect.
+
+Example 5:
+Source (KO): 수출 부진이 지속되었다.
+Translation (EN): Exports continued to remain sluggish.
+marked_text: remain sluggish
+Gemini's note: 원문의 '부진이 지속'은 continue weakly로 번역해야 하므로 remain sluggish는 문맥상 부정확함.
+Answer: Y
+Reason: 'remain sluggish' is a natural and correct expression for '부진이 지속'. Gemini's suggested phrasing 'continue weakly' is unnatural.
+
+--- NOW JUDGE ---
 
 Answer with only "Y" or "N". No explanation.
 
