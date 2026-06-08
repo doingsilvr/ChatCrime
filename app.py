@@ -95,19 +95,19 @@ def check_type1(marked_text, translation):
 # ─── 유형2: LLM 기반 검수 ───
 def check_type2(client, source, translation, marked_text, note):
     try:
-        prompt = f"""You are a fact-checker. Answer only Y or N.
+        prompt = f"""You are a translation QA fact-checker. Answer only Y or N.
 
-Is the expression "{marked_text}" grammatically and contextually correct in the following translation?
+Your task is to judge whether Gemini's error note is actually correct.
 
-- Y: The expression is correct as is
-- N: The expression contains a real grammatical or contextual error
+- Y: Gemini's note is WRONG. The marked expression is acceptable in this translation. (= false positive)
+- N: Gemini's note is CORRECT. The marked expression is genuinely a translation error.
 
 Answer with only "Y" or "N". No explanation.
 
 Source (KO): {source}
 Translation (EN): {translation}
 marked_text: {marked_text}
-Gemini note: {note}"""
+Gemini's error note: {note}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -116,10 +116,10 @@ Gemini note: {note}"""
             temperature=0
         )
         answer = response.choices[0].message.content.strip().upper()
-        if "N" in answer:
-            return "X"
+        if "Y" in answer:
+            return "X"  # Gemini note가 틀림 → 허위 오류
         else:
-            return "O"
+            return "O"  # Gemini note가 맞음 → 실제 오류
     except Exception as e:
         return f"오류: {e}"
 
